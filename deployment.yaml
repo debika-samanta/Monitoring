@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-native-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cloud-native-app
+  template:
+    metadata:
+      labels:
+        app: cloud-native-app
+    spec:
+      containers:
+      - name: cloud-native-container
+        image: 955254327185.dkr.ecr.us-east-1.amazonaws.com/my-cloud-native-repo:latest
+        ports:
+        - containerPort: 80

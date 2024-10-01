@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System Monitoring</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .plotly-graph-div {
+            margin: auto;
+            width: 50%;
+            background-color: rgba(151, 128, 128, 0.688);
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>System Monitoring</h1>
+        <div id="cpu-gauge" class="plotly-graph-div"></div>
+        <div id="mem-gauge" class="plotly-graph-div"></div>
+        <div id="alert-container"></div>
+    </div>
+
+    <script>
+        function fetchMetrics() {
+            $.getJSON('/metrics', function(data) {
+                // Update CPU gauge
+                var cpuUpdate = {
+                    value: data.cpu_metric,
+                    gauge: {
+                        threshold: {
+                            value: data.cpu_metric
+                        }
+                    }
+                };
+                Plotly.restyle('cpu-gauge', cpuUpdate);
+
+                // Update Memory gauge
+                var memUpdate = {
+                    value: data.mem_metric,
+                    gauge: {
+                        threshold: {
+                            value: data.mem_metric
+                        }
+                    }
+                };
+                Plotly.restyle('mem-gauge', memUpdate);
+
+                // Update alert message if high CPU or memory is detected
+                if (data.message) {
+                    $('#alert-container').html(`<div class="alert alert-danger">${data.message}</div>`);
+                } else {
+                    $('#alert-container').empty();
+                }
+            });
+        }
+
+        // Initialize gauges with initial values
+        function initGauges() {
+            var cpuGauge = {
+                type: "indicator",
+                mode: "gauge+number",
+                value: 0,  // Initial value
+                gauge: {
+                    axis: { range: [null, 100] },
+                    bar: { color: "#1f77b4" },
+                    steps: [
+                        { range: [0, 50], color: "#d9f0a3" },
+                        { range: [50, 85], color: "#ffeb84" },
+                        { range: [85, 100], color: "#ff5f5f" }
+                    ],
+                    threshold: {
+                        line: { color: "red", width: 4 },
+                        thickness: 0.75,
+                        value: 0  // Initial threshold
+                    }
+                }
+            };
+
+            var memGauge = {
+                type: "indicator",
+                mode: "gauge+number",
+                value: 0,  // Initial value
+                gauge: {
+                    axis: { range: [null, 100] },
+                    bar: { color: "#1f77b4" },
+                    steps: [
+                        { range: [0, 50], color: "#d9f0a3" },
+                        { range: [50, 85], color: "#ffeb84" },
+                        { range: [85, 100], color: "#ff5f5f" }
+                    ],
+                    threshold: {
+                        line: { color: "red", width: 4 },
+                        thickness: 0.75,
+                        value: 0  // Initial threshold
+                    }
+                }
+            };
+
+            Plotly.newPlot('cpu-gauge', [cpuGauge], { title: "CPU Utilization" });
+            Plotly.newPlot('mem-gauge', [memGauge], { title: "Memory Utilization" });
+        }
+
+        // Initialize the gauges when the page loads
+        $(document).ready(function() {
+            initGauges();
+
+            // Fetch and update metrics every 5 seconds
+            setInterval(fetchMetrics, 5000);
+        });
+    </script>
+</body>
+</html>
